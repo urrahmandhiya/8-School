@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class ItemPickUp : MonoBehaviour
+public class ItemPickUp : MonoBehaviour, IInteractable
 {
+    [SerializeField] private SoundEffectDetailsSO soundEffectDetails;
+
     public Item item;
     public Items itemDrop;
+    [HideInInspector] public StatSO stat;
+
+    public int price;
     // Start is called before the first frame update
     void Start()
     {
@@ -19,19 +24,16 @@ public class ItemPickUp : MonoBehaviour
         
     }
 
-    private void OnTriggerEnter2D(Collider2D coll)
-    {
-        if (coll.gameObject.tag == "Player")
-        {
-            pStatManager player = coll.gameObject.GetComponent<pStatManager>();
-            AddItem(player);
-            Destroy(this.gameObject);
-        }
-    }
 
     public void AddItem(pStatManager player)
     {
-        foreach(ItemList i in player.items)
+        // Play attack sound if there is one
+        if (soundEffectDetails.itemGetSoundEffect != null)
+        {
+            SoundEffectManager.Instance.PlaySoundEffect(soundEffectDetails.itemGetSoundEffect);
+        }
+
+        foreach (ItemList i in player.items)
         {
             if (i.name == item.GiveName())
             {
@@ -47,19 +49,51 @@ public class ItemPickUp : MonoBehaviour
     {
         switch (itemToAssign)
         {
-            case Items.AirSuci:
-                return new AirSuci();
+            case Items.CursedDollUpperHalf:
+                return new CursedDollUpperHalf();
+            case Items.CursedDollLowerHalf:
+                return new CursedDollLowerHalf();
             case Items.ObatMerah:
                 return new ObatMerah();
+            case Items.KerisBracelet:
+                return new KerisBracelet();
+
+            #region New Items
+            case Items.MovSpeedDuration:
+                return new MovSpeedDuration();
+            case Items.IncreaseDef:
+                return new IncreaseDef();
+            case Items.DoubleLeaf:
+                return new DoubleLeaf();
+            #endregion
+
             default:
-                return new AirSuci();
+                return new ObatMerah();
         }
+    }
+
+    public void Interact()
+    {
+        pStatManager player = GameObject.FindGameObjectWithTag("Player").GetComponent<pStatManager>();
+        if (player.stat.leaf >= price)
+        {
+            player.stat.leaf -= price;
+            AddItem(player);
+            Destroy(this.gameObject);
+        }
+        
     }
 }
 
 public enum Items
 {
     ObatMerah,
-    AirSuci,
+    CursedDollUpperHalf,
+    CursedDollLowerHalf,
+    KerisBracelet,
+    MovSpeedDuration,
+    IncreaseDef,
+    DoubleLeaf,
+    
 
 }

@@ -7,121 +7,166 @@ using UnityEngine;
 
 public class PlayerCombat : MonoBehaviour
 {
+    [SerializeField] private SoundEffectDetailsSO soundEffectDetails;
 
     public List<attackSO> attackL;
     public List<attackSO> attackLU;
     public List<attackSO> attackU;
-    public List<attackSO> attackUR;
+    public List<attackSO> attackRU;
     public List<attackSO> attackR;
-    public List<attackSO> attackLRD;
+    public List<attackSO> attackRD;
     public List<attackSO> attackD;
-    public List<attackSO> attackDL;
+    public List<attackSO> attackLD;
 
     float lastClickedTime;
     float lastComboEnd;
     public int comboCounter;
 
     float angle;
-    float newAngle;
+    float attackAngle;
     float delayAngle;
     bool togle;
+
+    
 
 
     [SerializeField] bool attackDelay;
     [SerializeField] bool comboDelay;
     Animator animator;
+
+
+    [SerializeField] private Camera cam;
     // Start is called before the first frame update
     void Start()
     {
         animator = GetComponent<Animator>();
         delayAngle = -5f;
         lastComboEnd = -2f;
+        cam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
     }
 
     // Update is called once per frame
     async void Update()
     {
-        if (Input.GetButtonDown("Fire1")){
-            await Attack();
+        if (Input.GetButtonDown("Fire1"))
+        {
+            Attack();
         }
         ExitAttack();
         //MouseAngle();
-        Toggle();
     }
     void MouseAngle(){
-        if(Time.time - delayAngle > 0.5f){
-        angle = Mathf.Atan2 (Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X")) * Mathf.Rad2Deg;
-        if (angle<0) angle += 360;
-        switch (angle){
-                case float i when i >= 0 && i <=23:
-                    newAngle = 0;
-                    break;
-                case float i when i >= 337 && i <= 369:
-                    newAngle = 0;
-                    break;
-                case float i when i > 23 && i < 77:
-                    newAngle = 45;
-                    break;
-                case float i when i >= 77 && i <= 113:
-                    newAngle = 90;
-                    break;
-                case float i when i > 113 && i < 157:
-                    newAngle = 135;
-                    break;
-                case float i when i >= 157 && i <= 203:
-                    newAngle = 180;
-                    break;
-                case float i when i > 203 && i < 247:
-                    newAngle = 225;
-                    break;
-                case float i when i >= 247 && i <= 303:
-                    newAngle = 270;
-                    break;
-                case float i when i > 303 && i < 337:
-                    newAngle = 315;
-                    break;
-            };
+        Vector3 test = cam.ScreenToWorldPoint(Input.mousePosition) - cam.transform.position;
+            
+        float i = Mathf.Atan2 (test.y, test.x) * Mathf.Rad2Deg;
+
+
+        if (i >= 0 && i <=23) {attackAngle = 1;}
+        else if (i >= -23 && i <= 0) {attackAngle = 1;}
+        else if (i > 23 && i < 77) {attackAngle = 2;}
+        else if (i >= 77 && i <= 113) {attackAngle = 3;}
+        else if (i > 113 && i < 157) {attackAngle = 4;}
+        else if (i >= 157 && i <= 180 || i >= -157 && i <= -180) {attackAngle = 5;}
+        else if (i > -157 && i < -113) {attackAngle = 6;}
+        else if (i >= -113 && i <= -77) {attackAngle = 7;}
+        else if (i > -77 && i < -23) {attackAngle = 8;}
         
-        Debug.Log(newAngle);
-        delayAngle = Time.time;
-        }
 
     }
-    void Toggle(){
-        if (Input.GetKeyDown(KeyCode.Space)){
-            newAngle = 0;
-        };
-        if (Input.GetKeyDown(KeyCode.CapsLock)){
-            newAngle = 180;
-        }
-    }
-    async Task Attack(){
+    void Attack(){
+
         if (comboDelay == false && comboCounter <= attackD.Count){
-            CancelInvoke("EndCombo");
+            CancelInvoke("newEndCombo");
 
             if(attackDelay == false){
-                switch(newAngle){
-                    case 0:
-                        animator.runtimeAnimatorController = attackU[comboCounter].animatorOV;
+
+                // Play attack sound if there is one
+                if (soundEffectDetails.playerAttackSoundEffect != null)
+                {
+                    SoundEffectManager.Instance.PlaySoundEffect(soundEffectDetails.playerAttackSoundEffect);
+                }
+
+                MouseAngle();
+
+
+                switch(attackAngle){
+                    case 1:
+                        animator.Play($"Attack{comboCounter}");
+                        ///animator.runtimeAnimatorController = attackR[comboCounter].animatorOV;
+                        animator.SetFloat("Horizontal", 1);
+                        animator.SetFloat("Vertical", 0);
+                        animator.SetFloat("attHorizontal", 1);
+                        animator.SetFloat("attVertical", 0);
                     break;
                     
-                    case 180:
-                        animator.runtimeAnimatorController = attackD[comboCounter].animatorOV;
+                    case 2:
+                        animator.Play($"Attack{comboCounter}");
+                        ///animator.runtimeAnimatorController = attackRU[comboCounter].animatorOV;
+                        animator.SetFloat("Horizontal", 1);
+                        animator.SetFloat("Vertical", 1);
+                        animator.SetFloat("attHorizontal", 1);
+                        animator.SetFloat("attVertical", 1);
+                    break;
+                    case 3:
+                        animator.Play($"Attack{comboCounter}");
+                        ///animator.runtimeAnimatorController = attackU[comboCounter].animatorOV;
+                        animator.SetFloat("Horizontal", 0);
+                        animator.SetFloat("Vertical", 1);
+                        animator.SetFloat("attHorizontal", 0);
+                        animator.SetFloat("attVertical", 1);
+                    break;
+                    case 4:
+                        animator.Play($"Attack{comboCounter}");
+                        ///animator.runtimeAnimatorController = attackLU[comboCounter].animatorOV;
+                        animator.SetFloat("Horizontal", -1);
+                        animator.SetFloat("Vertical", 1);
+                        animator.SetFloat("attHorizontal", -1);
+                        animator.SetFloat("attVertical", 1);
+                    break;
+                    case 5:
+                        animator.Play($"Attack{comboCounter}");
+                        ///animator.runtimeAnimatorController = attackL[comboCounter].animatorOV;
+                        animator.SetFloat("Horizontal", -1);
+                        animator.SetFloat("Vertical", 0);
+                        animator.SetFloat("attHorizontal", -1);
+                        animator.SetFloat("attVertical", 0);
+                    break;
+                    case 6:
+                        animator.Play($"Attack{comboCounter}");
+                        ///animator.runtimeAnimatorController = attackLD[comboCounter].animatorOV;
+                        animator.SetFloat("Horizontal", -1);
+                        animator.SetFloat("Vertical", -1);
+                        animator.SetFloat("attHorizontal", -1);
+                        animator.SetFloat("attVertical", -1);
+                    break;
+                    case 7:
+                        animator.Play($"Attack{comboCounter}");
+                        ///animator.runtimeAnimatorController = attackD[comboCounter].animatorOV;
+                        animator.SetFloat("Horizontal", 0);
+                        animator.SetFloat("Vertical", -1);
+                        animator.SetFloat("attHorizontal", 0);
+                        animator.SetFloat("attVertical", -1);
+                    break;
+                    case 8:
+                        animator.Play($"Attack{comboCounter}");
+                        ///animator.runtimeAnimatorController = attackRD[comboCounter].animatorOV;
+                        animator.SetFloat("Horizontal", 1);
+                        animator.SetFloat("Vertical", -1);
+                        animator.SetFloat("attHorizontal", 1);
+                        animator.SetFloat("attVertical", -1);
                     break;
                     
                 }
 
-                animator.Play("Attack");
-                await EndAttack();
+                ///animator.Play("Attack");
+                comboCounter++; 
+                ///await EndAttack();
                 
                 ///Debug.Log("attack");
 
                 if (comboCounter >= attackD.Count){
-                    
-                    comboDelay = true;
-                    await Task.Delay(3000);
                     comboCounter = 0;
-                    comboDelay = false;
+                    
 
 
                     ///Debug.Log("combo");
@@ -132,8 +177,13 @@ public class PlayerCombat : MonoBehaviour
 
     void ExitAttack(){
         if(animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.9f && animator.GetCurrentAnimatorStateInfo(0).IsTag("Attack")){
-            Invoke("EndCombo", 1);
+            Invoke("newEndCombo", 1);
         }
+    }
+
+    void newEndCombo()
+    {
+        comboCounter = 0;
     }
 
     async Task EndCombo()
